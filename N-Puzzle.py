@@ -3,7 +3,7 @@ from copy import deepcopy
 from queue import PriorityQueue
 import time
 
-textFile="n-puzzle.txt"
+textFile="testing/4x4.txt"
 
 class n_puzzle():
     '''
