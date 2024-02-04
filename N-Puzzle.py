@@ -3,7 +3,7 @@ from copy import deepcopy
 from queue import PriorityQueue
 import time
 
-textFile="testing/4x4.txt"
+textFile="n-puzzle.txt"
 
 class n_puzzle():
     '''
@@ -18,6 +18,9 @@ class n_puzzle():
 
 
     def __lt__(self, other):
+        '''
+        Here in case a comparison needs to be made
+        '''
         return self.heuristicsValue < other.heuristicsValue
     
     def findPos(self,value):
@@ -34,33 +37,50 @@ class n_puzzle():
 
     def heuristics(self):
         '''
-        This will be done using Euclidian Distance
+        This will be done using Manhattan Distance
+        In this code in a block of comments is my Euclidian Distance model as that works as well
+        and developed it first and realized that Manhatten Distance works better
         '''
         distance = 0
         for i in range(self.length):
             for j in range (self.length):
                 value = self.state[i][j]
                 if value != 0:
+                    '''
+                    Made Euclidian Distance model before realizing while it works its not the best
+                    in this case and i could just do 
                     xPos = value //self.length
                     yPos = (value)%self.length
                     xCalc = (xPos-i)**2
                     yCalc = (yPos-j)**2
                     calc = sqrt(xCalc+yCalc)
-                    distance += calc
-        return round(distance)
+                    '''
+
+                    '''
+                    This is Manhattan Distance for one block
+                    '''
+                    xPos = value //self.length # Finds the values goal state y cordinate
+                    yPos = (value)%self.length # Finds the values goal state y cordinate
+
+                    xCalc = abs(xPos-i) # Figures out the x distance
+                    yCalc = abs(yPos-j) # Figures out the y distance
+                    calc = xCalc+yCalc # Figures out that blocks Manhatten Distance
+
+
+                    distance += calc # Adds to total distance
+        return distance
 
     def __init__(self,state,movePosX=None,movePosY=None,parent=None):
+        '''
+        Set up command
+        
+
+        '''
         self.state = state
         self.parent = parent
         self.length = len(state)
         self.movePosX = movePosX
         self.movePosY = movePosY
-        # self.goalState = goalState
-
-        # Initalize Goal State if its the first time being run 
-        # if (self.goalState == None):
-        #     self.goalState = self.goal(self.length)
-
         # Initalize where the 0 position is so i know what i can move 
         if(self.movePosX == None or self.movePosY == None):
             self.movePosX,self.movePosY = self.findPos(0)
@@ -73,37 +93,24 @@ class n_puzzle():
         '''
         return self.state
     
-    def getLength(self) -> int:
-        return self.length
-
-    def getMovePos(self):
-        return [self.movePosX,self.movePosY]
-
     def move(self):
         '''
         Figure out the movement that can be made by the puzzle and then figuring out which one to choose
         '''
+
+        # The possible moves
         xLeft = None
         xRight = None
         yUp = None
         yDown = None
-        xRHer = None
-        xLHer = None
-        yDHer = None
-        yUHer = None
-        if(self.heuristicsValue == 0):
-            print(self.getState)
-            return 3
-        
+     
 
         if (self.movePosX != (self.length - 1)):
-            newState = deepcopy(self.state)
+            newState = deepcopy(self.state) # Deep copy makes it so its not a complete replica
             temp = newState[self.movePosX][self.movePosY]
             newState[self.movePosX][self.movePosY] = newState[self.movePosX+1][self.movePosY]
             newState[self.movePosX+1][self.movePosY] = temp
             xRight = n_puzzle(newState,self.movePosX+1,self.movePosY,self)
-            xRHer = xRight.heuristics()
-        
         
         if (self.movePosX != 0):
             newState = deepcopy(self.state)
@@ -111,7 +118,6 @@ class n_puzzle():
             newState[self.movePosX][self.movePosY] = newState[self.movePosX-1][self.movePosY]
             newState[self.movePosX-1][self.movePosY] = temp
             xLeft = n_puzzle(newState,self.movePosX-1,self.movePosY,self)
-            xLHer = xLeft.heuristics()
         
         if (self.movePosY != (self.length - 1)):
             newState = deepcopy(self.state)
@@ -119,7 +125,6 @@ class n_puzzle():
             newState[self.movePosX][self.movePosY] = newState[self.movePosX][self.movePosY+1]
             newState[self.movePosX][self.movePosY+1] = temp
             yDown = n_puzzle(newState,self.movePosX,self.movePosY+1,self)
-            yDHer = yDown.heuristics()
 
         if (self.movePosY != 0):
             newState = deepcopy(self.state)
@@ -127,20 +132,18 @@ class n_puzzle():
             newState[self.movePosX][self.movePosY] = newState[self.movePosX][self.movePosY-1]
             newState[self.movePosX][self.movePosY-1] = temp
             yUp = n_puzzle(newState,self.movePosX,self.movePosY-1,self)
-            yUHer = yUp.heuristics()
         
         # Setting up a priority queue so that they are all added to the list
         priorQ = PriorityQueue()
     
-
-        if(None != xRHer):
-            priorQ.put((xRHer,xRight))
-        if(None != xLHer):
-            priorQ.put((xLHer,xLeft))
-        if(None != yDHer):
-            priorQ.put((yDHer,yDown))
-        if (None != yUHer):
-            priorQ.put((yUHer,yUp))
+        if(None != xRight):
+            priorQ.put((xRight.heuristicsValue,xRight))
+        if(None != xLeft):
+            priorQ.put((xLeft.heuristicsValue,xLeft))
+        if(None != yDown):
+            priorQ.put((yDown.heuristicsValue,yDown))
+        if (None != yUp):
+            priorQ.put((yUp.heuristicsValue,yUp))
         return priorQ
 
     def reverseCall(self):
@@ -168,42 +171,23 @@ def import_file(textFile='n-puzzle.txt'):
 
     return start_state
 
-def time_convert(sec):
-    mins = sec // 60
-    sec = sec % 60
-    hours = mins // 60
-    mins = mins % 60
-    print("Time Lapsed = {0}:{1}:{2}".format(int(hours),int(mins),sec))
 
-
-start_time = time.time()
-start_state = n_puzzle(import_file(textFile))
-closed = []
-openNodes = PriorityQueue()
-node = start_state
-count = 0
-while True:
-    closed.append(node.getState())  # Append the state, not the object
-    
-    temp = node.move()
-    
-    for i in range(temp.qsize()):
-        if temp.queue[i][1].getState() not in closed:
-            openNodes.put(temp.queue[i])
-    if (openNodes.empty()):
-        print("Unsolvable")
-        break
-    node = None
-    while node == None:
-        if openNodes.queue[0][1] not in closed:
-            node = openNodes.queue[0][1]
-        openNodes.get()
-    
-    # print("Iteration number:", count, " State:", node.getState())
-    count += 1
-    if node.heuristicsValue == 0:
-        node.reverseCall()
-        break
-end_time = time.time()
-time_lapsed = end_time - start_time
-time_convert(time_lapsed)
+if __name__ == "__main__":
+    node = n_puzzle(import_file(textFile)) # Loads the text file and makes it the first state
+    closed = [] # Says which combinations have already been tried 
+    nextState = PriorityQueue()
+    while True:
+        closed.append(node.getState())  # Append the state, not the object
+        newStates = node.move() # Gets the new States taht might be added
+        for i in range(newStates.qsize()):
+            if newStates.queue[i][1].getState() not in closed: # Only adds the new state if its not on the closed list
+                nextState.put(newStates.queue[i])
+        node = None
+        while node == None: # Only loads in the new state if its not on the closed list
+            if nextState.queue[0][1] not in closed:
+                node = nextState.queue[0][1]
+            nextState.get()
+        
+        if node.heuristicsValue == 0: # Once its done
+            node.reverseCall() 
+            break
